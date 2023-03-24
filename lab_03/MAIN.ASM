@@ -9,9 +9,9 @@ SSEG ENDS
 
 ; buffer data
 DSEG1 SEGMENT PARA public 'DATA'
-    N db 100
+    N db 50
     LEN db ?
-    BUF db 100 dup(0)
+    BUF db 50 dup(0)
 DSEG1 ENDS
 
 ; result data

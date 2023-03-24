@@ -1,3 +1,6 @@
+; Квадратная символьная матрица
+; Перевести все цифры в заглавные буквы
+
 EXTRN print_matrix: near
 EXTRN switch_to_symbols: near
 EXTRN input_matrix: near
@@ -13,8 +16,10 @@ SSEG ENDS
 
 DSEG SEGMENT PARA PUBLIC 'DATA'
     rows db 0
+    org 2h
     cols db 0
-    matrix db 9 * 9 dup("0")
+    org 4h
+    matrix db 9 * 9 dup('0')
 DSEG ENDS
 
 CSEG SEGMENT PARA PUBLIC 'CODE'
@@ -28,7 +33,7 @@ main:
     call new_line
     call print_matrix
     
-    mov ax, 4c00h
+    mov ah, 4ch
     int 21h
 CSEG ENDS
 END main

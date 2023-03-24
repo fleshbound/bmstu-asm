@@ -1,5 +1,6 @@
 PUBLIC new_line
 PUBLIC print_matrix
+PUBLIC move_to_next_row
 
 EXTRN rows: byte
 EXTRN cols: byte
@@ -38,10 +39,19 @@ new_line proc near
     ret
 new_line endp
 
+move_to_next_row proc near
+    sub si, word ptr [cols]
+    add si, 9
+    mov cl, bl
+    dec bl
+    ret
+move_to_next_row endp
+
 print_matrix proc near
     mov ah, 2
     mov bl, byte ptr [rows]
     mov si, 0
+    mov cx, 0
     
     p_col:
         mov cl, byte ptr [cols]
@@ -52,10 +62,9 @@ print_matrix proc near
             int 21h
             call space
             loop p_row
-        
+            
+        call move_to_next_row
         call new_line
-        mov cl, bl
-        dec bl
         loop p_col
         
     ret
@@ -74,6 +83,7 @@ input_matrix proc near
 
     mov bl, byte ptr [rows]
     mov si, 0
+    mov cx, 0
     
     i_col:
         mov cl, byte ptr [cols]
@@ -85,10 +95,9 @@ input_matrix proc near
             inc si
             call space
             loop i_row
-        
+
+        call move_to_next_row
         call new_line
-        mov cl, bl
-        dec bl
         loop i_col
         
     ret
