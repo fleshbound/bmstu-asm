@@ -2,3 +2,5 @@
 *.obj
 *.err
 *.brk
+*.swp
+*.map
