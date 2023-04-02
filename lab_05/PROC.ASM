@@ -1,8 +1,8 @@
-PUBLIC to_real_numb
-PUBLIC to_ubin
-PUBLIC to_shex
+PUBLIC str_to_num
+PUBLIC num_to_ubin
+PUBLIC num_to_shex
 
-EXTRN real_numb: near
+EXTRN number: near
 EXTRN len: byte
 EXTRN num_str: byte
 EXTRN bin_len: byte
@@ -14,7 +14,7 @@ EXTRN hex_sign: byte
 CSEG SEGMENT PARA PUBLIC 'CODE'
     ASSUME CS:CSEG
 
-to_real_numb proc near
+str_to_num proc near
     xor cx, cx
 
     mov cl, len
@@ -22,12 +22,12 @@ to_real_numb proc near
     dec si
     mov bx, 1
 
-    to_real:
+    to_num:
         xor ax, ax
-        mov al, byte ptr[num_str + si]
-        sub ax, "0"
+        mov al, byte ptr [num_str + si]
+        sub ax, '0'
         mul bx
-        add word ptr [real_numb], ax
+        add word ptr [number], ax
 
         mov ax, bx
         mov bx, 10
@@ -36,14 +36,13 @@ to_real_numb proc near
 
         dec si
 
-        loop to_real
+        loop to_num
 
     ret
-to_real_numb endp
-    
+str_to_num endp
 
-to_ubin proc near
-    mov ax, word ptr[real_numb]
+num_to_ubin proc near
+    mov ax, word ptr [number]
     mov si, 15
     xor dx, dx
     mov bx, 2
@@ -51,7 +50,7 @@ to_ubin proc near
     lbl:
         div bx
         mov bin_str[si], dl
-        add bin_str[si], "0"
+        add bin_str[si], '0'
         xor dx, dx
         inc bin_len
 
@@ -60,22 +59,21 @@ to_ubin proc near
         jne lbl
 
     ret
-to_ubin endp
+num_to_ubin endp
 
 
-to_shex proc near
-    mov ax, word ptr[real_numb]
+num_to_shex proc near
+    mov ax, word ptr [number]
     cmp ax, 7FFFh
     ja hex_to_neg
     
     mov hex_sign, '+'
     
-continue:
+    continue:
     xor cx, cx
 
     mov bx, 16
-    mov si, 5
-    mov ax, word ptr[real_numb]
+    mov si, 3
     xor dx, dx
 
     loop_shex:
@@ -83,7 +81,7 @@ continue:
         mov hex_str[si], dl
         cmp dl, 9 
         jg hex_char
-        add hex_str[si], "0"
+        add hex_str[si], '0'
 
         back:
         xor dx, dx
@@ -92,14 +90,20 @@ continue:
         dec si
         cmp ax, 0
         jne loop_shex
-
-
-    xor bx, bx
-    mov bl, 5
-    sub bl, hex_len
-    mov dh, byte ptr[num_str]
-    mov hex_str[bx], dh
-    ret
+        
+    inc si
+    test si, si
+    jne set_zeros
+    
+    end_lbl:
+        ret
+    
+    set_zeros:
+        mov hex_str[si - 1], '0'
+        dec si
+        jnz set_zeros
+        
+        jmp end_lbl
 
     hex_char:
         add hex_str[si], 55
@@ -110,8 +114,9 @@ continue:
         mov bx, 0FFFFh
         sub bx, ax
         mov ax, bx
+        inc ax
         jmp continue
-to_shex endp
+num_to_shex endp
 
 CSEG ENDS
 END

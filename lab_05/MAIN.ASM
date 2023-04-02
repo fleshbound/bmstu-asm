@@ -1,7 +1,7 @@
 EXTRN print_bin: near
 EXTRN print_hex: near
 EXTRN read_numb: near
-EXTRN newline: near
+EXTRN print_newline: near
 
 SSEG SEGMENT PARA STACK 'STACK'
     db 200 dup (?)
@@ -21,7 +21,7 @@ DSEG SEGMENT PARA PUBLIC 'DATA'
               db 10
               db 13
               db "Enter command: $"
-    f_ptr     dw 4 DUP (0)
+    f_table     dw 4 DUP (0)
 DSEG ENDS
 
 CSEG SEGMENT PARA PUBLIC 'CODE'
@@ -30,10 +30,10 @@ main:
     mov ax, DSEG
     mov ds, ax
     
-    mov f_ptr[0], exit
-    mov f_ptr[2], read_numb
-    mov f_ptr[4], print_bin
-    mov f_ptr[6], print_hex
+    mov f_table[0], exit
+    mov f_table[2], read_numb
+    mov f_table[4], print_bin
+    mov f_table[6], print_hex
 
     print_menu:
         mov ah, 9
@@ -43,16 +43,16 @@ main:
         int 21h
 
         xor ah,ah
-        sub al, "0"
+        sub al, '0'
         mov dl, 2
         mul dl
         mov bx, ax
 
-        call newline
-        call f_ptr[bx]
-        call newline
+        call print_newline
+        call f_table[bx]
+        call print_newline
         
-    jmp print_menu
+        jmp print_menu
 
 exit proc near
     mov ax, 4c00h
