@@ -10,16 +10,16 @@ CODE SEGMENT
 
 main:
     jmp initialize
-    old_int9h   dd ?
+    old_int8h   dd ?
     flag_inst   dw INSTALLED
     
-int9h_handler proc far
+int8h_handler proc far
     pusha
     push es
     push ds
     
     pushf
-    call cs:old_int9h
+    call cs:old_int8h
     
     ; get rtc
     mov ah, 02h         
@@ -47,22 +47,22 @@ quit:
     popa
     
     iret
-int9h_handler endp
+int8h_handler endp
 
 initialize proc near
     ; get old handler
-    mov ax, 3509h
+    mov ax, 3508h
     int 21h
     
     cmp es:flag_inst, INSTALLED
     je uninstall
     
-    mov word ptr old_int9h, bx      ; offset
-    mov word ptr old_int9h+2, es    ; segment
+    mov word ptr old_int8h, bx      ; offset
+    mov word ptr old_int8h+2, es    ; segment
     
     ; set new handler
-    mov ax, 2509h
-    mov dx, offset int9h_handler
+    mov ax, 2508h
+    mov dx, offset int8h_handler
     int 21h
     
     mov dx, offset init_msg
@@ -73,11 +73,36 @@ initialize proc near
     int 27h
 
 uninstall:
+    pusha
     push es
     push ds
+    
+    mov dx, word ptr es:old_int8h
+    mov ds, word ptr es:old_int8h+2
+    mov ax, 2508h
+    int 21h
+    
+    pop ds
+    pop es
+    popa
+    
+    mov al, 0f3h
+    out 60, al
+    mov al, 0
+    out 60h, al
+    
+    mov ah, 49h
+    int 21h
+    
+    mov dx, offset uninst_msg
+    mov ah, 9h
+    int 21h
+    
+    mov ax, 4c00h
+    int 21h
 
-init_msg    db '+installed+$'
-uninst_msg  db '-uninstalled-$' 
+init_msg    db 'int9 installed$'
+uninst_msg  db 'int9 uninstalled$' 
 curr_sec    db 0
 speed       db 01fh
 INSTALLED   equ 0DEADh
