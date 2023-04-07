@@ -41,6 +41,7 @@ reset:
     mov speed, MIN_SPEED
 
 quit:
+    popf
     pop ds
     pop es
     popa
@@ -102,10 +103,10 @@ uninstall:
     mov ax, 4c00h
     int 21h
 
-init_msg    db 'int9 installed$'
-uninst_msg  db 'int9 uninstalled$' 
-curr_sec    db 0
-speed       db 01fh
+init_msg    db  -'int9 installed$'
+uninst_msg  db  'int9 uninstalled$' 
+curr_sec    db  0
+speed       db  01fh
 INSTALLED   equ 0DEADh
 MIN_SPEED   equ 01fh
  
