@@ -17,15 +17,16 @@ int8h_handler proc far
     pusha
     push es
     push ds
+    
     pushf
     call cs:old_int8h
     
-    ; get rtc, check sec
+    ; get rtc
     mov ah, 02h         
     int 1ah
     cmp dh, curr_sec
     mov curr_sec, dh
-    je end
+    je quit
     
     mov al, 0f3h
     out 60h, al
@@ -33,15 +34,14 @@ int8h_handler proc far
     out 60h, al
     
     dec speed
-    cmp speed, MIN_SPEED
+    cmp speed, MAX_SPEED
     je reset
-    jmp end
+    jmp quit
     
 reset:
-    mov speed, MIN_SPEED
+    mov speed, MAX_SPEED
 
-end:
-		popf
+quit:
     pop ds
     pop es
     popa
@@ -69,7 +69,6 @@ initialize proc near
     mov ah, 9
     int 21h
     
-		; resident program int
     mov dx, offset initialize
     int 27h
 
@@ -77,26 +76,21 @@ uninstall:
     pusha
     push es
     push ds
-		pushf
     
-		; set old handler
     mov dx, word ptr es:old_int8h
     mov ds, word ptr es:old_int8h+2
     mov ax, 2508h
     int 21h
     
-		popf
     pop ds
     pop es
     popa
     
-		; reset max speed
     mov al, 0f3h
-    out 60h, al
+    out 60, al
     mov al, 0
     out 60h, al
     
-		; free program memory
     mov ah, 49h
     int 21h
     
@@ -107,12 +101,12 @@ uninstall:
     mov ax, 4c00h
     int 21h
 
-init_msg    db 'int8h installed$'
-uninst_msg  db 'int8h uninstalled$' 
+init_msg    db 'int9 installed$'
+uninst_msg  db 'int9 uninstalled$' 
 curr_sec    db 0
 speed       db 01fh
 INSTALLED   equ 0DEADh
-MIN_SPEED   equ 01fh
+MAX_SPEED   equ 01fh
  
 initialize endp
 
