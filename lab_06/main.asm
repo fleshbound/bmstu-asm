@@ -17,7 +17,6 @@ int8h_handler proc far
     pusha
     push es
     push ds
-    
     pushf
     call cs:old_int8h
     
@@ -34,12 +33,12 @@ int8h_handler proc far
     out 60h, al
     
     dec speed
-    cmp speed, MAX_SPEED
+    cmp speed, MIN_SPEED
     je reset
     jmp quit
     
 reset:
-    mov speed, MAX_SPEED
+    mov speed, MIN_SPEED
 
 quit:
     pop ds
@@ -76,12 +75,14 @@ uninstall:
     pusha
     push es
     push ds
+    pushf
     
     mov dx, word ptr es:old_int8h
     mov ds, word ptr es:old_int8h+2
     mov ax, 2508h
     int 21h
     
+    popf
     pop ds
     pop es
     popa
@@ -106,7 +107,7 @@ uninst_msg  db 'int9 uninstalled$'
 curr_sec    db 0
 speed       db 01fh
 INSTALLED   equ 0DEADh
-MAX_SPEED   equ 01fh
+MIN_SPEED   equ 01fh
  
 initialize endp
 
