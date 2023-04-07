@@ -1,7 +1,9 @@
 ; var 1: Командой дальнего вызова подпрограммы CALL в начале обработчика
 ; прерывания с предварительным сохранением регистра флагов в стеке.
+;
+; int 8h вызывает, в свою очередь, int 1Ch - рекомендованное для
+; использования прерывание, поэтому перехватываем его
 .model tiny
-
 .186    ; popa, pusha
 
 CODE SEGMENT
@@ -10,15 +12,15 @@ CODE SEGMENT
 
 main:
     jmp initialize
-    old_int8h   dd  ?
+    old_int1Ch  dd  ?
     flag_inst   dw  INSTALLED
     curr_sec    db  0
     speed       db  01fh
     
-int8h_handler proc far
+int1Ch_handler proc far
     pushf
-    call cs:old_int8h
-    
+    call cs:old_int1Ch
+
     ; get rtc
     mov ah, 02h         
     int 1ah
@@ -30,7 +32,7 @@ int8h_handler proc far
     out 60h, al
     mov al, speed
     out 60h, al
-    
+
     dec speed
     test speed, MIN_SPEED
     jz reset
@@ -41,7 +43,7 @@ reset:
 
 quit:
     iret
-int8h_handler endp
+int1Ch_handler endp
 
 initialize proc near
     ; get old handler
@@ -50,15 +52,15 @@ initialize proc near
 
     cmp es:flag_inst, INSTALLED
     je uninstall
-    
-    mov word ptr old_int8h, bx      ; offset
-    mov word ptr old_int8h+2, es    ; segment
-    
+
+    mov word ptr old_int1Ch, bx      ; offset
+    mov word ptr old_int1Ch+2, es    ; segment
+
     ; set new handler
     mov ax, 251Ch
-    mov dx, offset int8h_handler
+    mov dx, offset int1Ch_handler
     int 21h
-    
+
     mov dx, offset init_msg
     mov ah, 9
     int 21h
@@ -67,30 +69,30 @@ initialize proc near
     int 27h
 
 uninstall:
-    mov dx, word ptr es:old_int8h
-    mov ds, word ptr es:old_int8h+2
-    
+    mov dx, word ptr es:old_int1Ch
+    mov ds, word ptr es:old_int1Ch+2
+
     mov ax, 251Ch
     int 21h
-    
+
     mov al, 0f3h
     out 60h, al
     mov al, 0
     out 60h, al
-    
+
     ; fix: mov dx, offset uninst_msg
 
     mov ah, 49h
     int 21h
-    
+
     mov ax, 4c00h
     int 21h 
 initialize endp
 
 MIN_SPEED   equ 01fh
 INSTALLED   equ 0DEADh
-init_msg    db  'int9 installed$'
-uninst_msg  db  'int9 uninstalled$'
+init_msg    db  'int1C installed$'
+; uninst_msg  db  'int1C uninstalled$'
 
 CODE ends
     end main
