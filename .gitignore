@@ -4,3 +4,4 @@
 *.brk
 *.swp
 *.map
+*.o
