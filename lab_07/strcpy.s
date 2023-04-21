@@ -13,8 +13,8 @@ _my_strcpy:
         cmp     edi, esi
         je      quit
 not_equal:      
-        cmp     edi, esi        ; затирание src не помешает,
-        jl      copy            ; если [ebp + 12] - младший адрес
+        cmp     edi, esi
+        jl      copy
         
         mov     eax, edi
         sub     eax, esi
@@ -25,10 +25,10 @@ overlapping:
         add     esi, ecx
         sub     edi, 1
         sub     esi, 1                
-        std                     ; df = 1 - обратный ход
+        std
 copy:
         rep     movsb
-        cld                     ; df = 0 - стандартный ход
+        cld
 quit:
         pop ebp
         ret

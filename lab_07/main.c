@@ -11,14 +11,13 @@ size_t asm_strlen(const char *string)
     size_t len = 0;
 
     __asm__ (
-        ".intel_syntax noprefix\n\t"
-        "mov %%ecx, -1\n\t"
-        "lea %%edi, [%1]\n\t"
-        "xor %%al, %%al\n\t"
-        "repne scasb\n\t"
-        "not %%ecx\n\t"
-        "dec %%ecx\n\t"
-        "mov %0, %%ecx\n\t"
+        "mov %%ecx, -1\n"
+        "lea %%edi, [%1]\n"
+        "xor %%al, %%al\n"
+        "repne scasb\n"
+        "not %%ecx\n"
+        "dec %%ecx\n"
+        "mov %0, %%ecx\n"
         : "=r" (len)
         : "r" (string)
         : "%edi", "%ecx", "%al"
