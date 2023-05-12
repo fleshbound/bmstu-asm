@@ -5,6 +5,7 @@ option casemap: none
 include \masm32\include\windows.inc
 include \masm32\include\user32.inc
 include \masm32\include\kernel32.inc
+include \masm32\macros\macros.asm
 
 includelib \masm32\lib\user32.lib
 includelib \masm32\lib\kernel32.lib
@@ -45,11 +46,8 @@ wY          EQU         500
 
     .code
 main:
-        invoke  GetModuleHandle, NULL
-        mov     hinstance, eax
-        
-        invoke  GetCommandLine
-        mov     cmdLine, eax
+        mov     hinstance, rv(GetModuleHandle, NULL)
+        mov     cmdLine, rv(GetCommandLine)
         
         invoke  wMain, hinstance, NULL, cmdLine, SW_SHOWDEFAULT
         invoke  ExitProcess, eax
@@ -66,20 +64,18 @@ wMain       proc    hinst: HINSTANCE, hPrevInst: HWND, CmdLine: DWORD, CmdShow: 
         mov     wClass.cbWndExtra, NULL
         push    hinst
         pop     wClass.hInstance
-        mov     wClass.hbrBackground, COLOR_WINDOW
+        mov     wClass.hbrBackground, 1 + 1
         mov     wClass.lpszMenuName, NULL
         mov     wClass.lpszClassName, offset wClassName
-        invoke  LoadIcon, NULL, IDI_APPLICATION
-        mov     wClass.hIcon, eax
-        mov     wClass.hIconSm, eax
-        invoke  LoadCursor, NULL, IDC_ARROW
-        mov     wClass.hCursor, eax
+        mov     wClass.hIcon, rv(LoadIcon, NULL, IDI_APPLICATION)
+        mov     wClass.hIconSm, rv(LoadIcon, NULL, IDI_APPLICATION)
+        mov     wClass.hCursor, rv(LoadCursor, NULL, IDC_ARROW)
         
         invoke  RegisterClassEx, addr wClass
         
         invoke  CreateWindowEx, WS_EX_CLIENTEDGE, addr wClassName, \
-                addr wTitle, WS_OVERLAPPEDWINDOW, wX, wY, \
-                eWidth * 2 +  13 * offX, eHeight * 6, NULL, NULL, hinst, NULL
+                addr wTitle, WS_OVERLAPPED or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_MAXIMIZEBOX, \
+                wX, wY, eWidth * 2 +  13 * offX, eHeight * 6, NULL, NULL, hinst, NULL
         mov     wHandle, eax
 
         invoke  ShowWindow, wHandle, SW_SHOWNORMAL
@@ -141,33 +137,29 @@ wProc       proc    hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM
                 .IF ax == BN_CLICKED
                     push    edi
                     push    ebx
+                    push    eax
                     
                     invoke  GetWindowText, hEntry1, addr buffer, 2
                     xor     edi, edi
                     xor     eax, eax
                     xor     ebx, ebx
-                    mov     cx, 10
-                    mov     bl, byte ptr buffer[edi]
-                    sub     bl, '0'
-                    mul     cx
-                    add     eax, ebx
+                    mov     al, byte ptr buffer[edi]
+                    sub     al, '0'
                     push    eax
                     
                     invoke  GetWindowText, hEntry2, addr buffer, 2
                     xor     edi, edi
                     xor     eax, eax
                     xor     ebx, ebx
-                    mov     cx, 10
-                    mov     bl, byte ptr buffer[edi]
-                    sub     bl, '0'
-                    mul     cx
-                    add     eax, ebx
+                    mov     al, byte ptr buffer[edi]
+                    sub     al, '0'
                     pop     ebx
                     add     eax, ebx
                     
                     invoke  wsprintf, addr buffer, addr resFmt, eax
                     invoke  MessageBox, hWnd, addr buffer, addr resText, MB_OK
 
+                    pop     eax
                     pop     ebx
                     pop     edi
                 .ENDIF
