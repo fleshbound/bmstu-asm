@@ -26,7 +26,7 @@ exitTitle   db          " Exit Program   ", 0
 
     .data?
 cmdLine     LPSTR       ?
-hinstance   HINSTANCE   ?
+hInstance   HINSTANCE   ?
 hButton     HWND        ?
 hEntry1     HWND        ?
 hEntry2     HWND        ?
@@ -46,24 +46,23 @@ wY          EQU         500
 
     .code
 main:
-        mov     hinstance, rv(GetModuleHandle, NULL)
+        mov     hInstance, rv(GetModuleHandle, NULL)
         mov     cmdLine, rv(GetCommandLine)
-        
-        invoke  wMain, hinstance, NULL, cmdLine, SW_SHOWDEFAULT
+        invoke  wMain, hInstance, NULL, cmdLine, SW_SHOWDEFAULT
         invoke  ExitProcess, eax
     
-wMain       proc    hinst: HINSTANCE, hPrevInst: HWND, CmdLine: DWORD, CmdShow: DWORD
+wMain       proc    hInst: HINSTANCE, hPrevInst: HWND, CmdLine: DWORD, CmdShow: DWORD
         LOCAL   wClass:     WNDCLASSEX
         LOCAL   msg:        MSG
         LOCAL   wHandle:    HWND
+        LOCAL   wHandle1:   HWND
        
         mov     wClass.cbSize, SIZEOF WNDCLASSEX
         mov     wClass.style, CS_HREDRAW or CS_VREDRAW
         mov     wClass.lpfnWndProc, offset wProc
         mov     wClass.cbClsExtra, NULL
         mov     wClass.cbWndExtra, NULL
-        push    hinst
-        pop     wClass.hInstance
+        m2m     hInst, wClass.hInstance
         mov     wClass.hbrBackground, 1 + 1
         mov     wClass.lpszMenuName, NULL
         mov     wClass.lpszClassName, offset wClassName
@@ -75,11 +74,19 @@ wMain       proc    hinst: HINSTANCE, hPrevInst: HWND, CmdLine: DWORD, CmdShow: 
         
         invoke  CreateWindowEx, WS_EX_CLIENTEDGE, addr wClassName, \
                 addr wTitle, WS_OVERLAPPED or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_MAXIMIZEBOX, \
-                wX, wY, eWidth * 2 +  13 * offX, eHeight * 6, NULL, NULL, hinst, NULL
+                wX, wY, eWidth * 2 +  13 * offX, eHeight * 6, NULL, NULL, hInst, NULL
         mov     wHandle, eax
+        
+        ;invoke  CreateWindowEx, WS_EX_CLIENTEDGE, addr wClassName, \
+        ;        addr wTitle, WS_OVERLAPPED or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_MAXIMIZEBOX, \
+        ;        wX, wY, eWidth * 2 +  13 * offX, eHeight * 6, NULL, NULL, hInst, NULL
+        ;mov     wHandle1, eax
 
         invoke  ShowWindow, wHandle, SW_SHOWNORMAL
         invoke  UpdateWindow, wHandle
+        
+        ;invoke  ShowWindow, wHandle1, SW_SHOWNORMAL
+        ;invoke  UpdateWindow, wHandle1
         
         .WHILE TRUE
                 invoke  GetMessage, addr msg, NULL, 0, 0
@@ -87,7 +94,7 @@ wMain       proc    hinst: HINSTANCE, hPrevInst: HWND, CmdLine: DWORD, CmdShow: 
                 invoke  TranslateMessage, addr msg
                 invoke  DispatchMessage, addr msg
         .ENDW
-        
+
         mov     eax, msg.wParam
         ret
 wMain   endp
@@ -96,7 +103,8 @@ wProc       proc    hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM
         LOCAL   exitHandle: HWND
         LOCAL   tmpHandle:  HWND
 
-        .IF uMsg == WM_CLOSE
+        Switch uMsg
+            case WM_CLOSE
                 invoke  MessageBox, hWnd, addr exitText, addr exitTitle, \
                         MB_OKCANCEL or MB_ICONQUESTION
                 mov exitHandle, eax
@@ -104,33 +112,33 @@ wProc       proc    hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM
                 .IF exitHandle == IDOK
                         invoke  DestroyWindow, hWnd
                 .ENDIF
-                
-        .ELSEIF uMsg == WM_DESTROY
+                    
+            case WM_DESTROY
                 invoke  PostQuitMessage, NULL
-                
-        .ELSEIF uMsg == WM_CREATE
+                    
+            case WM_CREATE
                 invoke  CreateWindowEx, WS_EX_CLIENTEDGE, addr eClassName, NULL,\
                         WS_CHILD or WS_VISIBLE or WS_BORDER or ES_LEFT \
                         or ES_AUTOHSCROLL or WS_TABSTOP, \
-                        eX, eY, eWidth, eHeight, hWnd, 1, hinstance, NULL
+                        eX, eY, eWidth, eHeight, hWnd, idEntry, hInstance, NULL
                 mov     hEntry1, eax
                 
                 invoke  CreateWindowEx, WS_EX_CLIENTEDGE, addr eClassName, NULL,\
                         WS_CHILD or WS_VISIBLE or WS_BORDER or ES_LEFT \
                         or ES_AUTOHSCROLL or WS_TABSTOP, \
-                        eX + eWidth + offX, eY, eWidth, eHeight, hWnd, 2, hinstance, NULL
+                        eX + eWidth + offX, eY, eWidth, eHeight, hWnd, idEntry, hInstance, NULL
                 mov     hEntry2, eax
                 
                 invoke  CreateWindowEx, NULL, addr bClassName, addr bText, \
                         WS_CHILD or WS_VISIBLE or BS_DEFPUSHBUTTON or WS_TABSTOP, \
-                        eX, eY + eHeight + offY, eWidth * 2 + offX, eHeight, hWnd, 3, hinstance, NULL
+                        eX, eY + eHeight + offY, eWidth * 2 + offX, eHeight, hWnd, idButton, hInstance, NULL
                 mov     hButton, eax 
                 
                 invoke  SendMessage, hEntry1, EM_SETLIMITTEXT, 1, NULL
                 invoke  SendMessage, hEntry2, EM_SETLIMITTEXT, 1, NULL
                 invoke  SetFocus, hEntry1
             
-        .ELSEIF uMsg == WM_COMMAND
+            case WM_COMMAND
                 mov     eax, wParam
                 shr     eax, 16
                     
@@ -163,13 +171,9 @@ wProc       proc    hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM
                     pop     ebx
                     pop     edi
                 .ENDIF
-            
-        .ELSE
-                invoke  DefWindowProc, hWnd, uMsg, wParam, lParam
-                ret
-        .ENDIF
+        Endsw
         
-        xor     eax, eax
+        invoke  DefWindowProc, hWnd, uMsg, wParam, lParam
         ret
 wProc   endp
 
