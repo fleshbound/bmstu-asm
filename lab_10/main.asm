@@ -63,12 +63,12 @@ wMain       proc    hInst: HINSTANCE, hPrevInst: HWND, CmdLine: DWORD, CmdShow: 
         mov     wClass.cbClsExtra, NULL
         mov     wClass.cbWndExtra, NULL
         m2m     hInst, wClass.hInstance
-        mov     wClass.hbrBackground, 1 + 1
+        mov     wClass.hbrBackground, 3
         mov     wClass.lpszMenuName, NULL
         mov     wClass.lpszClassName, offset wClassName
         mov     wClass.hIcon, rv(LoadIcon, NULL, IDI_APPLICATION)
-        mov     wClass.hIconSm, rv(LoadIcon, NULL, IDI_APPLICATION)
-        mov     wClass.hCursor, rv(LoadCursor, NULL, IDC_ARROW)
+        mov     wClass.hIconSm, rv(LoadIcon, NULL, IDI_SHIELD)
+        mov     wClass.hCursor, rv(LoadCursor, NULL, IDC_NO)
         
         invoke  RegisterClassEx, addr wClass
         
@@ -76,17 +76,9 @@ wMain       proc    hInst: HINSTANCE, hPrevInst: HWND, CmdLine: DWORD, CmdShow: 
                 addr wTitle, WS_OVERLAPPED or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_MAXIMIZEBOX, \
                 wX, wY, eWidth * 2 +  13 * offX, eHeight * 6, NULL, NULL, hInst, NULL
         mov     wHandle, eax
-        
-        ;invoke  CreateWindowEx, WS_EX_CLIENTEDGE, addr wClassName, \
-        ;        addr wTitle, WS_OVERLAPPED or WS_CAPTION or WS_SYSMENU or WS_MINIMIZEBOX or WS_MAXIMIZEBOX, \
-        ;        wX, wY, eWidth * 2 +  13 * offX, eHeight * 6, NULL, NULL, hInst, NULL
-        ;mov     wHandle1, eax
 
         invoke  ShowWindow, wHandle, SW_SHOWNORMAL
         invoke  UpdateWindow, wHandle
-        
-        ;invoke  ShowWindow, wHandle1, SW_SHOWNORMAL
-        ;invoke  UpdateWindow, wHandle1
         
         .WHILE TRUE
                 invoke  GetMessage, addr msg, NULL, 0, 0
@@ -111,6 +103,8 @@ wProc       proc    hWnd: HWND, uMsg: UINT, wParam: WPARAM, lParam: LPARAM
                 
                 .IF exitHandle == IDOK
                         invoke  DestroyWindow, hWnd
+                .ELSE
+                    ret
                 .ENDIF
                     
             case WM_DESTROY
